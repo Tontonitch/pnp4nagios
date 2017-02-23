@@ -7,17 +7,15 @@
 # This is a template for the visualisation addon PNP (http://www.pnp4nagios.org)
 #
 
-$def[1] = "";
-$opt[1] = "";
-
 $defcnt = 1;
 
 $green = "33FF00E0";
 $yellow = "FFFF00E0";
 $red = "F83838E0";
 $now = "FF00FF";
+$ds_count = count($DS);
 
-foreach ($DS as $i) {
+for ($i = 1; $i <= $ds_count; $i++) {
     $warning = ($WARN[$i] != "") ? $WARN[$i] : "";
     $warnmin = ($WARN_MIN[$i] != "") ? $WARN_MIN[$i] : "";
     $warnmax = ($WARN_MAX[$i] != "") ? $WARN_MAX[$i] : "";
@@ -27,6 +25,26 @@ foreach ($DS as $i) {
     $minimum = ($MIN[$i] != "") ? $MIN[$i] : "";
     $maximum = ($MAX[$i] != "") ? $MAX[$i] : "";
 
+    if(preg_match('/^pct_open_files$/', $NAME[$i])) {
+        $ds_name[$defcnt] = "Open Files Usage";
+        $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Open files usage on $hostname\" --upper-limit 100 --lower-limit 0";
+        $def[$defcnt] = ""; 
+        $def[$defcnt] .= "DEF:openfiles_pct=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
+        $def[$defcnt] .= "AREA:openfiles_pct#111111:\" \" ";
+        $def[$defcnt] .= "VDEF:vopenfiles=openfiles_pct,LAST " ;
+        $def[$defcnt] .= "GPRINT:vopenfiles:\"Open files usage is %3.2lf percent\\n\" " ;
+        $defcnt++;
+    }   
+    if(preg_match('/^connects_aborted_per_sec$/', $NAME[$i])) {
+        $ds_name[$defcnt] = "Aborted connections per second";
+        $opt[$defcnt] = "--vertical-label \"Seconds\" --title \"Aborted connections per second on $hostname\" ";
+        $def[$defcnt] = ""; 
+        $def[$defcnt] .= "DEF:aborted_conn=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
+        $def[$defcnt] .= "AREA:aborted_conn#444444:\" \" ";
+        $def[$defcnt] .= "VDEF:vaborted_conn=aborted_conn,LAST " ;
+        $def[$defcnt] .= "GPRINT:vaborted_conn:\"Aborted connections per sec is %3.2lf \\n\" " ;
+        $defcnt++;
+    }
     if(preg_match('/^connection_time$/', $NAME[$i])) {
         $ds_name[$defcnt] = "Time to connect";
         $opt[$defcnt] = "--vertical-label \"Seconds\" --title \"Time to establish a connection to $hostname\" ";
@@ -57,7 +75,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Index usage";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Index usage $hostname\" --upper-limit 100 --lower-limit 0 ";
         $def[$defcnt] = "";
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^index_usage$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:indexusage=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ar=indexusage,$CRIT_MIN[$ii],LE,indexusage,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,indexusage,0,IF ";
@@ -83,7 +101,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Innodb buffer pool hitrate";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Innodb buffer pool hitrate on $hostname\" --upper-limit 100 --lower-limit 0 ";
         $def[$defcnt] = "";
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^bufferpool_hitrate$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:hitrate=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ar=hitrate,$CRIT_MIN[$ii],LE,hitrate,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,hitrate,0,IF ";
@@ -139,7 +157,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "MyISAM key cache hitrate";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"MyISAM key cache hitrate on $hostname\" --upper-limit 100 --lower-limit 0 ";
         $def[$defcnt] = "";
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^keycache_hitrate$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:hitrate=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ar=hitrate,$CRIT_MIN[$ii],LE,hitrate,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,hitrate,0,IF ";
@@ -165,7 +183,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Query cache hitrate";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Query cache hitrate on $hostname\" --upper-limit 100 --lower-limit 0 ";
         $def[$defcnt] = ""; 
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^qcache_hitrate$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:hitrate=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ar=hitrate,$CRIT_MIN[$ii],LE,hitrate,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,hitrate,0,IF ";
@@ -189,7 +207,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Selects per second";
         $opt[$defcnt] = "--vertical-label \"Selects / sec\" --title \"Selects per second on $hostname\" ";
         $def[$defcnt] = ""; 
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^selects_per_sec$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:sps=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "AREA:sps#$now:\" \" ";
@@ -224,7 +242,7 @@ foreach ($DS as $i) {
         # set upper limit to 10, because 3 means an already dead database
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Table lock contention on $hostname\" --upper-limit 10 --lower-limit 0 ";
         $def[$defcnt] = "";
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^tablelock_contention$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:tbllckcont=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ag=tbllckcont,$WARN[$ii],LE,tbllckcont,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,tbllckcont,0,IF ";
@@ -250,7 +268,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Table cache hitrate";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Table cache hitrate on $hostname\" --upper-limit 100 --lower-limit 0 ";
         $def[$defcnt] = "";
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^tablecache_hitrate$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:hitrate=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ar=hitrate,$CRIT_MIN[$ii],LE,hitrate,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,hitrate,0,IF ";
@@ -276,7 +294,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Temporary tables created on disk ";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Temporary tables created on disk on $hostname\" --upper-limit 10 --lower-limit 0 ";
         $def[$defcnt] = "";
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^pct_tmp_table_on_disk$/', $NAME[$ii])) {
 
             $def[$defcnt] .= "DEF:tmptbldsk=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
@@ -303,7 +321,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Thread cache hitrate";
         $opt[$defcnt] = "--vertical-label \"Percent\" --title \"Thread cache hitrate on $hostname\" --upper-limit 100 --lower-limit 0 ";
         $def[$defcnt] = ""; 
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^thread_cache_hitrate$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:hitrate=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "CDEF:ar=hitrate,$CRIT_MIN[$ii],LE,hitrate,0,GT,INF,UNKN,IF,UNKN,IF,ISINF,hitrate,0,IF ";
@@ -327,7 +345,7 @@ foreach ($DS as $i) {
         $ds_name[$defcnt] = "Connects per second";
         $opt[$defcnt] = "--vertical-label \"Conects / sec\" --title \"Connects per second on $hostname\" ";
         $def[$defcnt] = ""; 
-        foreach ($DS as $ii) {
+	for ($ii = 1; $ii <= $ds_count; $ii++) {
           if(preg_match('/^connections_per_sec$/', $NAME[$ii])) {
             $def[$defcnt] .= "DEF:sps=$RRDFILE[$ii]:$DS[$ii]:AVERAGE:reduce=LAST " ;
             $def[$defcnt] .= "AREA:sps#$now:\" \" ";
@@ -347,54 +365,5 @@ foreach ($DS as $i) {
         $def[$defcnt] .= "GPRINT:vthreads:\"%.0lf Connection threads \" " ;
         $defcnt++;
     }
-    if(preg_match('/^threads_running$/', $NAME[$i])) {
-        $ds_name[$defcnt] = "Running threads";
-        $opt[$defcnt] = "--vertical-label \"Threads\" --title \"Running threads on $hostname\" ";
-        $def[$defcnt] = "";
-        $def[$defcnt] .= "DEF:threads=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
-        $def[$defcnt] .= "AREA:threads#111111 ";
-        $def[$defcnt] .= "VDEF:vthreads=threads,LAST " ;
-        $def[$defcnt] .= "GPRINT:vthreads:\"%.0lf Running threads \" " ;
-        $defcnt++;
-    }
-    if(preg_match('/^threads_cached$/', $NAME[$i])) {
-        $ds_name[$defcnt] = "Cached threads";
-        $opt[$defcnt] = "--vertical-label \"Threads\" --title \"Cached threads on $hostname\" ";
-        $def[$defcnt] = "";
-        $def[$defcnt] .= "DEF:threads=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
-        $def[$defcnt] .= "AREA:threads#111111 ";
-        $def[$defcnt] .= "VDEF:vthreads=threads,LAST " ;
-        $def[$defcnt] .= "GPRINT:vthreads:\"%.0lf Cached threads \" " ;
-        $defcnt++;
-    }
-    if(preg_match('/^pct_open_files$/', $NAME[$i])) {
-        $ds_name[$defcnt] = "PCT Open Files";
-        $opt[$defcnt] = "--vertical-label \"OpenFiles\" --title \"PCT Open Files $hostname\" ";
-        $def[$defcnt] = "";
-        $def[$defcnt] .= "DEF:threads=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
-        $def[$defcnt] .= "AREA:threads#111111 ";
-        $def[$defcnt] .= "VDEF:vthreads=threads,LAST " ;
-        $def[$defcnt] .= "GPRINT:vthreads:\"%.0lf Open Files \" " ;
-        $defcnt++;
-    }
-    if(preg_match('/^threads_created_per_sec$/', $NAME[$i])) {
-        $ds_name[$defcnt] = "Created thread per second";
-        $opt[$defcnt] = "--vertical-label \"Created threads / sec\" --title \"Created threads per second on $hostname\" ";
-        $def[$defcnt] = ""; 
-        $def[$defcnt] .= "DEF:sps=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
-        $def[$defcnt] .= "AREA:sps#$now:\" \" ";
-        $def[$defcnt] .= "VDEF:vsps=sps,LAST " ;
-        $def[$defcnt] .= "GPRINT:vsps:\"%3.2lf Created threads per second \\n\" ";
-        }
-    if(preg_match('/^connects_aborted_per_sec$/', $NAME[$i])) {
-        $ds_name[$defcnt] = "Aborted Connects per second";
-        $opt[$defcnt] = "--vertical-label \"Aborted connects / sec\" --title \"Aborted Connects per second on $hostname\" ";
-        $def[$defcnt] = ""; 
-        $def[$defcnt] .= "DEF:sps=$RRDFILE[$i]:$DS[$i]:AVERAGE:reduce=LAST " ;
-        $def[$defcnt] .= "AREA:sps#$now:\" \" ";
-        $def[$defcnt] .= "VDEF:vsps=sps,LAST " ;
-        $def[$defcnt] .= "GPRINT:vsps:\"%3.2lf Aborted Connects per second \\n\" ";
-        }
 }
 ?>
-
